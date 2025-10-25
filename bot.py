@@ -34,10 +34,15 @@ async def on_message(message):
         prompt = content[4:].strip()
 
         use_recent = prompt.startswith("-recent")
+        use_expensive = "-expensive" in prompt
         context_messages = None
 
         if use_recent:
             prompt = prompt.replace("-recent", "", 1).strip()
+        if use_expensive:
+            prompt = prompt.replace("-expensive", "").strip()
+            
+        if use_recent:
             messages = []
             async for msg in message.channel.history(limit=10):
                 if msg.author.bot:
@@ -92,13 +97,17 @@ async def on_message(message):
             # Generates video 
             loop = asyncio.get_event_loop()
             
-            # Moving to the correct model
+            # Choose model based on -expensive flag
+            generator_func = generate_video if use_expensive else generate_video_cheap
+            
+            # Build kwargs
+            kwargs = {"image": image_url}
+            if use_recent and context_messages:
+                kwargs["context"] = context_messages
+            
             vid_output = await loop.run_in_executor(
                 None,
-                generate_video_cheap,
-                prompt,
-                image_url,
-                context_messages if use_recent else None
+                lambda: generator_func(prompt, **kwargs)
             )
             
             if isinstance(vid_output, list):
