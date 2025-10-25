@@ -29,7 +29,8 @@ def generate_video(user_prompt, image=None, context=None):
                 "prompt": prompt,
                 "image": image,
                 "audio": False,  # No audio needed for GIF conversion
-                "resolution": resolution
+                "resolution": resolution,
+                "duration": Config.GIF_DURATION  # Limit to 3 seconds to control costs
             }
         )
     else:
@@ -76,7 +77,8 @@ def generate_video_cheap(user_prompt, image=None, context=None):
             input={
                 "prompt": prompt,
                 "image": image,
-                "resolution": resolution
+                "resolution": resolution,
+                "duration": Config.GIF_DURATION  # Limit to 3 seconds to control costs
             }
         )
     else:
@@ -87,7 +89,8 @@ def generate_video_cheap(user_prompt, image=None, context=None):
             "bytedance/seedance-1-lite",
             input={
                 "prompt": full_prompt,
-                "resolution": resolution
+                "resolution": resolution,
+                "duration": Config.GIF_DURATION  # Limit to 3 seconds to control costs
             }
         )
     
