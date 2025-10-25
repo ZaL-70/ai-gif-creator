@@ -36,6 +36,19 @@ async def on_message(message):
         use_recent = prompt.startswith("-recent")
         use_expensive = "-expensive" in prompt
         context_messages = None
+        resolution_quality = "low"  # Default to low
+        
+        # Check for resolution flag
+        if "-resolution" in prompt:
+            parts = prompt.split()
+            for i, part in enumerate(parts):
+                if part == "-resolution" and i + 1 < len(parts):
+                    next_part = parts[i + 1].lower()
+                    if next_part in ["low", "medium", "high"]:
+                        resolution_quality = next_part
+                        # Remove both -resolution and the quality value
+                        prompt = prompt.replace(f"-resolution {parts[i + 1]}", "").strip()
+                    break
 
         if use_recent:
             prompt = prompt.replace("-recent", "", 1).strip()
@@ -101,7 +114,7 @@ async def on_message(message):
             generator_func = generate_video if use_expensive else generate_video_cheap
             
             # Build kwargs
-            kwargs = {"image": image_url}
+            kwargs = {"image": image_url, "resolution_quality": resolution_quality}
             if use_recent and context_messages:
                 kwargs["context"] = context_messages
             
