@@ -1,0 +1,1 @@
+# Cuts the generated AI video into a gif
