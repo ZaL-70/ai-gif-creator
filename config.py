@@ -20,6 +20,14 @@ class Config:
     GIF_DURATION = 3  # seconds
     GIF_FPS = 10
     MAX_FILE_SIZE_MB = 8
+    
+    # Video Resolution Settings
+    RESOLUTION_QUALITY = "low"  # Options: "low", "medium", "high"
+    RESOLUTION_MAP = {
+        "low": "480p",
+        "medium": "720p",
+        "high": "1080p"
+    }
 
     # Paths
     TEMP_DIR = 'temp'
