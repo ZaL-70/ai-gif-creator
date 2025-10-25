@@ -94,14 +94,14 @@ async def on_message(message):
             if image_url:
                 vid_output = await loop.run_in_executor(
                     None,
-                    generate_video,
+                    generate_video_cheap,
                     prompt,
                     image_url
                 )
             else:
                 vid_output = await loop.run_in_executor(
                     None,
-                    generate_video,
+                    generate_video_cheap,
                     prompt
                 )
             
