@@ -2,7 +2,7 @@ import replicate
 import os
 from config import Config
 
-def generate_video(user_prompt, image=None):
+def generate_video(user_prompt, image=None, context=None):
     # Set Replicate API token from config
     os.environ["REPLICATE_API_TOKEN"] = Config.REPLICATE_API_TOKEN
     
@@ -13,10 +13,15 @@ def generate_video(user_prompt, image=None):
     if len(user_prompt) > Config.MAX_PROMPT_LENGTH:
         user_prompt = user_prompt[:Config.MAX_PROMPT_LENGTH]
     
+    # Prepare context section
+    context_section = ""
+    if context:
+        context_section = Config.CONTEXT_TEMPLATE.format(context_messages=context)
+    
     if image:
         # Use Veo 3 Fast model for image-to-video
         # Use a pre-prompt that instructs the model to study the image
-        prompt = Config.IMAGE_PROMPT_TEMPLATE.format(user_prompt=user_prompt)
+        prompt = Config.IMAGE_PROMPT_TEMPLATE.format(user_prompt=user_prompt, context_section=context_section)
         
         output = replicate.run(
             "google-deepmind/veo-3-fast",
@@ -30,7 +35,7 @@ def generate_video(user_prompt, image=None):
     else:
         # Use Sora 2 model for text-to-video
         # Format prompt using template from config
-        full_prompt = Config.PROMPT_TEMPLATE.format(user_prompt=user_prompt)
+        full_prompt = Config.PROMPT_TEMPLATE.format(user_prompt=user_prompt, context_section=context_section)
         
         # Request 3 seconds of video (pricing is per second, not frames)
         # Let the model use its optimal frame rate
@@ -46,7 +51,7 @@ def generate_video(user_prompt, image=None):
     
     return output
 
-def generate_video_cheap(user_prompt, image=None):
+def generate_video_cheap(user_prompt, image=None, context=None):
     # Set Replicate API token from config
     os.environ["REPLICATE_API_TOKEN"] = Config.REPLICATE_API_TOKEN
     
@@ -57,10 +62,14 @@ def generate_video_cheap(user_prompt, image=None):
     if len(user_prompt) > Config.MAX_PROMPT_LENGTH:
         user_prompt = user_prompt[:Config.MAX_PROMPT_LENGTH]
     
+    # Prepare context section
+    context_section = ""
+    if context:
+        context_section = Config.CONTEXT_TEMPLATE.format(context_messages=context)
     
     if image:
         # Image-to-video with SeedAnce-1-Lite
-        prompt = Config.IMAGE_PROMPT_TEMPLATE.format(user_prompt=user_prompt)
+        prompt = Config.IMAGE_PROMPT_TEMPLATE.format(user_prompt=user_prompt, context_section=context_section)
         
         output = replicate.run(
             "bytedance/seedance-1-lite",
@@ -72,7 +81,7 @@ def generate_video_cheap(user_prompt, image=None):
         )
     else:
         # Text-to-video with SeedAnce-1-Lite
-        full_prompt = Config.PROMPT_TEMPLATE.format(user_prompt=user_prompt)
+        full_prompt = Config.PROMPT_TEMPLATE.format(user_prompt=user_prompt, context_section=context_section)
         
         output = replicate.run(
             "bytedance/seedance-1-lite",
