@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 class Config:
     # Discord
     DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
@@ -15,7 +16,7 @@ class Config:
     REPLICATE_API_TOKEN = os.getenv('REPLICATE_API_TOKEN')
 
     # GIF Settings
-    MAX_PROMPT_LENGTH = 200
+    MAX_PROMPT_LENGTH = 350
     GIF_DURATION = 3  # seconds
     GIF_FPS = 10
     MAX_FILE_SIZE_MB = 8
@@ -23,5 +24,6 @@ class Config:
     # Paths
     TEMP_DIR = 'temp'
     
-    # Prompt
-    PROMPT_TEMPLATE = "a whimsical, funny, absurd, meme, goofy, brainrot style gif of the following: {user_prompt}"
+    # Prompt Templates
+    PROMPT_TEMPLATE = "You are a sentient meme engine that interprets human requests with maximal absurdity. You combine surrealism, meme logic, and chaotic dreamlike visual comedy. Every video should feel like it escaped from an alternate reality where humour evolved without context. Apply Gen Z absurdist humor. Now create the gif based on the following prompt: {user_prompt}"
+    IMAGE_PROMPT_TEMPLATE = "Analyze this image thoroughly, then transform it into pure brainrot content - the kind of absurdist, surreal Instagram Reel that makes no logical sense but is hypnotically entertaining. Apply Gen Z absurdist humor, ironic detachment, and that specific unhinged energy that defines modern internet culture. Now transform the image into this gif based on the following prompt: {user_prompt}"
