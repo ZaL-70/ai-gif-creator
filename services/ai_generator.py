@@ -6,6 +6,9 @@ def generate_video(user_prompt, image=None):
     # Set Replicate API token from config
     os.environ["REPLICATE_API_TOKEN"] = Config.REPLICATE_API_TOKEN
     
+    # Get resolution from config
+    resolution = Config.RESOLUTION_MAP[Config.RESOLUTION_QUALITY]
+    
     # Truncate prompt if it exceeds max length
     if len(user_prompt) > Config.MAX_PROMPT_LENGTH:
         user_prompt = user_prompt[:Config.MAX_PROMPT_LENGTH]
@@ -20,7 +23,8 @@ def generate_video(user_prompt, image=None):
             input={
                 "prompt": prompt,
                 "image": image,
-                "audio": False  # No audio needed for GIF conversion
+                "audio": False,  # No audio needed for GIF conversion
+                "resolution": resolution
             }
         )
     else:
@@ -35,7 +39,46 @@ def generate_video(user_prompt, image=None):
             input={
                 "prompt": full_prompt,
                 "duration": Config.GIF_DURATION,  # Request 3 seconds directly
-                "audio": False  # No audio needed for GIF conversion
+                "audio": False,  # No audio needed for GIF conversion
+                "resolution": resolution
+            }
+        )
+    
+    return output
+
+def generate_video_cheap(user_prompt, image=None):
+    # Set Replicate API token from config
+    os.environ["REPLICATE_API_TOKEN"] = Config.REPLICATE_API_TOKEN
+    
+    # Get resolution from config
+    resolution = Config.RESOLUTION_MAP[Config.RESOLUTION_QUALITY]
+    
+    # Truncate prompt if it exceeds max length
+    if len(user_prompt) > Config.MAX_PROMPT_LENGTH:
+        user_prompt = user_prompt[:Config.MAX_PROMPT_LENGTH]
+    
+    
+    if image:
+        # Image-to-video with SeedAnce-1-Lite
+        prompt = Config.IMAGE_PROMPT_TEMPLATE.format(user_prompt=user_prompt)
+        
+        output = replicate.run(
+            "bytedance/seedance-1-lite",
+            input={
+                "prompt": prompt,
+                "image": image,
+                "resolution": resolution
+            }
+        )
+    else:
+        # Text-to-video with SeedAnce-1-Lite
+        full_prompt = Config.PROMPT_TEMPLATE.format(user_prompt=user_prompt)
+        
+        output = replicate.run(
+            "bytedance/seedance-1-lite",
+            input={
+                "prompt": full_prompt,
+                "resolution": resolution
             }
         )
     
