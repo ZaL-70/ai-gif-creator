@@ -2,12 +2,12 @@ import replicate
 import os
 from config import Config
 
-def generate_video(user_prompt, image=None, context=None):
+def generate_video(user_prompt, image=None, context=None, resolution_quality="low"):
     # Set Replicate API token from config
     os.environ["REPLICATE_API_TOKEN"] = Config.REPLICATE_API_TOKEN
     
-    # Get resolution from config
-    resolution = Config.RESOLUTION_MAP[Config.RESOLUTION_QUALITY]
+    # Get resolution from config based on quality parameter
+    resolution = Config.RESOLUTION_MAP[resolution_quality]
     
     # Truncate prompt if it exceeds max length
     if len(user_prompt) > Config.MAX_PROMPT_LENGTH:
@@ -52,12 +52,12 @@ def generate_video(user_prompt, image=None, context=None):
     
     return output
 
-def generate_video_cheap(user_prompt, image=None, context=None):
+def generate_video_cheap(user_prompt, image=None, context=None, resolution_quality="low"):
     # Set Replicate API token from config
     os.environ["REPLICATE_API_TOKEN"] = Config.REPLICATE_API_TOKEN
     
-    # Get resolution from config
-    resolution = Config.RESOLUTION_MAP[Config.RESOLUTION_QUALITY]
+    # Get resolution from config based on quality parameter
+    resolution = Config.RESOLUTION_MAP[resolution_quality]
     
     # Truncate prompt if it exceeds max length
     if len(user_prompt) > Config.MAX_PROMPT_LENGTH:
