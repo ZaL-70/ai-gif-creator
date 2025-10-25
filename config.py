@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 class Config:
     # Discord
     DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
