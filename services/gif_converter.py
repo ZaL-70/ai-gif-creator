@@ -9,17 +9,28 @@ def gif_conversion(video_path):
     output_name = "output.gif"
     output_folder = "output_folder"
     Path(output_folder).mkdir(parents=True, exist_ok=True)
-    # load the file and makes a snippet of it 
+    
+    # Load the video
     clip = VideoFileClip(video_path)
 
     # Gets only the first 3 seconds
-    clip = clip.subclipped(0,3)
+    clip = clip.subclipped(0, Config.GIF_DURATION)
     
-    # Construct
+    # Get resolution from config (e.g., "480p" -> 480)
+    resolution_str = Config.RESOLUTION_MAP[Config.RESOLUTION_QUALITY]
+    target_height = int(resolution_str.replace('p', ''))
+    
+    # Resize to match config resolution while maintaining aspect ratio
+    clip = clip.resized(height=target_height)
+    
+    # Construct output path
     output_path = Path(output_folder) / output_name
  
-    # Write GIF to disk
-    clip.write_gif(str(output_path))
+    # Write GIF to disk with optimized settings from config
+    clip.write_gif(
+        str(output_path),
+        fps=Config.GIF_FPS  # Use FPS from config (10 fps)
+    )
 
     clip.close()
 
