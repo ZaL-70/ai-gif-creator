@@ -69,11 +69,11 @@ def generate_video_cheap(user_prompt, image=None, context=None, resolution_quali
         context_section = Config.CONTEXT_TEMPLATE.format(context_messages=context)
     
     if image:
-        # Image-to-video with SeedAnce-1-Lite
+        # Image-to-video with SeedAnce-1 Pro Max
         prompt = Config.IMAGE_PROMPT_TEMPLATE.format(user_prompt=user_prompt, context_section=context_section)
         
         output = replicate.run(
-            "bytedance/seedance-1-lite",
+            "bytedance/seedance-1-pro-max",
             input={
                 "prompt": prompt,
                 "image": image,
@@ -82,11 +82,11 @@ def generate_video_cheap(user_prompt, image=None, context=None, resolution_quali
             }
         )
     else:
-        # Text-to-video with SeedAnce-1-Lite
+        # Text-to-video with SeedAnce-1 Pro Max
         full_prompt = Config.PROMPT_TEMPLATE.format(user_prompt=user_prompt, context_section=context_section)
         
         output = replicate.run(
-            "bytedance/seedance-1-lite",
+            "bytedance/seedance-1-pro-max",
             input={
                 "prompt": full_prompt,
                 "resolution": resolution,
