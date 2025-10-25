@@ -93,22 +93,13 @@ async def on_message(message):
             loop = asyncio.get_event_loop()
             
             # Moving to the correct model
-            if image_url:
-                vid_output = await loop.run_in_executor(
-                    None,
-                    generate_video_cheap,
-                    prompt,
-                    image_url,
-                    context_messages if use_recent else None
-                )
-            else:
-                vid_output = await loop.run_in_executor(
-                    None,
-                    generate_video_cheap,
-                    prompt,
-                    None,
-                    context_messages if use_recent else None
-                )
+            vid_output = await loop.run_in_executor(
+                None,
+                generate_video_cheap,
+                prompt,
+                image_url,
+                context_messages if use_recent else None
+            )
             
             if isinstance(vid_output, list):
                 video_url = vid_output[0]
