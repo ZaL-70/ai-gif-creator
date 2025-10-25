@@ -13,10 +13,10 @@ def gif_conversion(video_path):
     clip = clip.subclipped(0,3)
 
     #save video clip as a gif
-    clip.write_gif("gfg_gif.gif")
+    clip.write_gif(output_name)
     
     # Construct
-    output_path = Path(output_folder) / output_name
+    output_path = Path(output_folder) , "/" , output_name
 
     # Write GIF to disk
     clip.write_gif(str(output_path))
