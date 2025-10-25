@@ -6,6 +6,8 @@ from utils.helpers import validate_prompt
 from services.gif_converter import *
 from services.ai_generator import *
 import asyncio
+import datetime
+import json
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -27,14 +29,34 @@ async def on_message(message):
         return
     
     content = message.content[len(Config.COMMAND_PREFIX):].strip()
-    #Command
+    # Command
     if content.lower().startswith('gif '):
         prompt = content[4:].strip()
-        
-        image_url = None
-        
+        if prompt.lower() == "recent":
+            messages = []
+            async for msg in message.channel.history(limit=10):
+                if msg.author.bot:
+                    continue  # skip bots
+                messages.append({
+                    "author": str(msg.author),
+                    "content": msg.content,
+                    "timestamp": msg.created_at.isoformat(),
+                    "id": msg.id
+                })
+            messages.reverse()  # chronological order
+
+            os.makedirs("data", exist_ok=True)
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            file_path = os.path.join("data", f"messages_{timestamp}.json")
+
+            with open(file_path, "w", encoding="utf-8") as f:
+                json.dump(messages, f, indent=2, ensure_ascii=False)
+
+            return
+
         # Check if image prompt
-        if (message.attachments):
+        image_url = None
+        if message.attachments:
             attachment = message.attachments[0]
             
             if attachment.content_type and attachment.content_type.startswith('image/'):

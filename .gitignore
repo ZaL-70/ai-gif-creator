@@ -6,9 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
-# audio and gifs
+# assets & resources
 .mp4
 .gifs
+.json
 
 # Distribution / packaging
 .Python
