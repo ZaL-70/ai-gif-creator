@@ -13,7 +13,9 @@ def gif_conversion(video_path):
     clip = clip.subclipped(0,3)
     
     # Construct
-    output_path = Path(output_folder) , "/" , output_name
-
+    output_path = Path(output_folder) / output_name
+ 
     # Write GIF to disk
     clip.write_gif(str(output_path))
+    
+gif_conversion(r"C:\Users\aryan\projects\coding\ai-gif-creator\temp\Video\thorsten.mp4")
