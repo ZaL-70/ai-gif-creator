@@ -32,7 +32,11 @@ async def on_message(message):
     # Command
     if content.lower().startswith('gif '):
         prompt = content[4:].strip()
-        if prompt.lower() == "recent":
+
+        use_recent = prompt.startswith("-recent")
+
+        if use_recent:
+            prompt = prompt.replace("-recent", "", 1).strip()
             messages = []
             async for msg in message.channel.history(limit=10):
                 if msg.author.bot:
@@ -41,9 +45,9 @@ async def on_message(message):
                     "author": str(msg.author),
                     "content": msg.content,
                     "timestamp": msg.created_at.isoformat(),
-                    "id": msg.id
                 })
             messages.reverse()  # chronological order
+            json_string = json.dumps(messages, indent=2, ensure_ascii=False)
 
             os.makedirs("data", exist_ok=True)
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -52,7 +56,9 @@ async def on_message(message):
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(messages, f, indent=2, ensure_ascii=False)
 
-            return
+            # Combine context and prompt
+            if json_string:
+                prompt = f"Here's the message history:\n{json_string}\n\nHere's the User Prompt:\n{prompt}"
 
         # Check if image prompt
         image_url = None
@@ -79,14 +85,12 @@ async def on_message(message):
             status_msg = await message.channel.send("Creating gif from Image + Prompt... (1-2 minutes)")
         else:
             status_msg = await message.channel.send("Generating the gif... (1-2 minutes)")
-            
-        
+
         try:
             # Generates video 
             loop = asyncio.get_event_loop()
             
             # Moving to the correct model
-            
             if image_url:
                 vid_output = await loop.run_in_executor(
                     None,
@@ -95,7 +99,11 @@ async def on_message(message):
                     image_url
                 )
             else:
-                vid_output = await loop.run_in_executor(None, generate_video, prompt)
+                vid_output = await loop.run_in_executor(
+                    None,
+                    generate_video,
+                    prompt
+                )
             
             if isinstance(vid_output, list):
                 video_url = vid_output[0]
