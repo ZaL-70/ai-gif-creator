@@ -54,9 +54,8 @@ async def on_messsage(message):
             # Converts to gif
             gif_path = await loop.run_in_executor(
                 None,
-                download(video_url),
-                video_url,
-                Config.GIF_DURATION
+                download,
+                video_url
             )
             
             # Checks file size
