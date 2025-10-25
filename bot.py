@@ -34,6 +34,7 @@ async def on_message(message):
         prompt = content[4:].strip()
 
         use_recent = prompt.startswith("-recent")
+        context_messages = None
 
         if use_recent:
             prompt = prompt.replace("-recent", "", 1).strip()
@@ -47,7 +48,6 @@ async def on_message(message):
                     "timestamp": msg.created_at.isoformat(),
                 })
             messages.reverse()  # chronological order
-            json_string = json.dumps(messages, indent=2, ensure_ascii=False)
 
             os.makedirs("data", exist_ok=True)
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -56,9 +56,11 @@ async def on_message(message):
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(messages, f, indent=2, ensure_ascii=False)
 
-            # Combine context and prompt
-            if json_string:
-                prompt = f"Here's the message history:\n{json_string}\n\nHere's the User Prompt:\n{prompt}"
+            # Format context messages for prompt with author, timestamp, and content
+            context_messages = "\n".join([
+                f"- [{msg['timestamp']}] {msg['author']}: {msg['content']}" 
+                for msg in messages[-5:]
+            ])  # Last 5 messages
 
         # Check if image prompt
         image_url = None
@@ -96,13 +98,16 @@ async def on_message(message):
                     None,
                     generate_video_cheap,
                     prompt,
-                    image_url
+                    image_url,
+                    context_messages if use_recent else None
                 )
             else:
                 vid_output = await loop.run_in_executor(
                     None,
                     generate_video_cheap,
-                    prompt
+                    prompt,
+                    None,
+                    context_messages if use_recent else None
                 )
             
             if isinstance(vid_output, list):
