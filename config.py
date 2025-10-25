@@ -23,3 +23,6 @@ class Config:
 
     # Paths
     TEMP_DIR = 'temp'
+    
+    # Prompt
+    PROMPT_TEMPLATE = "a whimsical, funny, absurd, silly, vibrant colors, meme, goofy, brainrot style {user_prompt}"
