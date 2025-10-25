@@ -46,14 +46,19 @@ async def on_message(message):
                     next_part = parts[i + 1].lower()
                     if next_part in ["low", "medium", "high"]:
                         resolution_quality = next_part
-                        # Remove both -resolution and the quality value
-                        prompt = prompt.replace(f"-resolution {parts[i + 1]}", "").strip()
+                        # Remove both -resolution and the quality value (preserving original case)
+                        prompt = prompt.replace(f"-resolution {parts[i + 1]}", "", 1).strip()
+                        # Clean up any double spaces
+                        prompt = " ".join(prompt.split())
                     break
 
         if use_recent:
             prompt = prompt.replace("-recent", "", 1).strip()
         if use_expensive:
             prompt = prompt.replace("-expensive", "").strip()
+        
+        # Final cleanup: remove any remaining flags and clean up spaces
+        prompt = " ".join(prompt.split())
             
         if use_recent:
             messages = []
