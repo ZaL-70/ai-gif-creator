@@ -45,5 +45,3 @@ def download(video_url):
 
     except Exception as e:
         raise Exception(f"GIF conversion failed: {str(e)}")
-
-gif_conversion(r"C:\Users\aryan\projects\coding\ai-gif-creator\temp\Video\thorsten.mp4")

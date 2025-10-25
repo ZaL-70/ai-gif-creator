@@ -20,7 +20,7 @@ async def on_ready():
     print(f'{client.user} has connected to Discord!')
     
 @client.event
-async def on_messsage(message):
+async def on_message(message):
     if message.author == client.user:
         return
     if not message.content.startswith(Config.COMMAND_PREFIX):
@@ -31,18 +31,49 @@ async def on_messsage(message):
     if content.lower().startswith('gif '):
         prompt = content[4:].strip()
         
+        image_url = None
+        
+        # Check if image prompt
+        if (message.attachments):
+            attachment = message.attachments[0]
+            
+            if attachment.content_type and attachment.content_type.startswith('image/'):
+                if attachment.size > 8 * 1024 * 1024:
+                    await message.channel.sent("Error: Image is too large! Max size is 8MB.")
+                    return
+                image_url = attachment.url
+                print(f"image detected:", {image_url})
+            else:
+                await message.channel.send("Incorrect image type.")
+                return    
+        
         # Validate
         is_valid, error = validate_prompt(prompt)
         if not is_valid:
             await message.channel.send(f"error caused {error}")
             return
             
-        status_msg = await message.channel.send("Generating the gif... (1-2 minutes)")    
+        if image_url:
+            status_msg = await message.channel.send("Creating gif from Image + Prompt... (1-2 minutes)")
+        else:
+            status_msg = await message.channel.send("Generating the gif... (1-2 minutes)")
+            
         
         try:
             # Generates video 
             loop = asyncio.get_event_loop()
-            vid_output = await loop.run_in_executor(None, generate_video, prompt)
+            
+            # Moving to the correct model
+            
+            if image_url:
+                vid_output = await loop.run_in_executor(
+                    None,
+                    generate_video,
+                    prompt,
+                    image_url
+                )
+            else:
+                vid_output = await loop.run_in_executor(None, generate_video, prompt)
             
             if isinstance(vid_output, list):
                 video_url = vid_output[0]
@@ -66,7 +97,7 @@ async def on_messsage(message):
                 return
             
             # Send GIF 
-            await message.channel.send(file=discord.File(gif_path))
+            await message.channel.send(content=f"✨ Here's your GIF: *{prompt}*", file=discord.File(gif_path))
             await status_msg.delete()
             
             # Clean the GIF file 
