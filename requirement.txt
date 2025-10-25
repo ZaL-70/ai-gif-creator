@@ -1,0 +1,7 @@
+discord.py==2.3.2
+python-dotenv==1.0.0
+replicate==0.25.0
+Pillow==10.2.0
+imageio==2.34.0
+imageio-ffmpeg==0.4.9
+requests==2.31.0
