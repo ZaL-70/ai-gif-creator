@@ -24,4 +24,4 @@ class Config:
     TEMP_DIR = 'temp'
     
     # Prompt
-    PROMPT_TEMPLATE = "a whimsical, funny, absurd, silly, vibrant colors, meme, goofy, brainrot style {user_prompt}"
+    PROMPT_TEMPLATE = "a whimsical, funny, absurd, meme, goofy, brainrot style gif of the following: {user_prompt}"

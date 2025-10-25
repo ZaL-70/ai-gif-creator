@@ -16,8 +16,7 @@ def generate_video(user_prompt):
     # Calculate frames based on GIF_DURATION and GIF_FPS from config
     frames = Config.GIF_DURATION * Config.GIF_FPS
     
-    output = replicate.run("another-ai-studio/zeroscope-v2-xl",
+    output = replicate.run("anotherjesse/zeroscope-v2-xl:9f747673945c62801b13b84701c783929c0ee784e4748ec062204894dda1a351",
                         input={"prompt": full_prompt,
-                               "motion_bucket_id": 40, 
-                               "frames": frames})
+                               "num_frames": frames})
     return output

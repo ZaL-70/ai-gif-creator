@@ -6,7 +6,6 @@ from pathlib import Path
 from config import Config
 
 def gif_conversion(video_path):
-
     output_name = "output.gif"
     output_folder = "output_folder"
     Path(output_folder).mkdir(parents=True, exist_ok=True)
@@ -21,6 +20,8 @@ def gif_conversion(video_path):
  
     # Write GIF to disk
     clip.write_gif(str(output_path))
+
+    clip.close()
 
     return output_path
 
