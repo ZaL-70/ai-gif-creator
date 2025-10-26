@@ -8,6 +8,7 @@ from services.ai_generator import *
 import asyncio
 import datetime
 import json
+import time
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -16,6 +17,9 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 client = discord.Client(intents=intents)
+
+user_cooldowns = {}
+COOLDOWN_SECONDS = 60
 
 @client.event
 async def on_ready():
@@ -77,19 +81,29 @@ async def on_message(message):
         
         await message.channel.send(embed=help_embed)
         return
-        
-    
     
     # Command
     if content.lower().startswith('gif '):
         prompt = content[4:].strip()
 
-        # Check for flags
+        user_id = message.author.id
+        current_time = time.monotonic()
+
+        # 1. Check cooldowns
+        last = user_cooldowns.get(user_id)
+        if last is not None:
+            time_since_last = current_time - last
+            if time_since_last < COOLDOWN_SECONDS:
+                remaining = int(COOLDOWN_SECONDS - time_since_last)
+                await message.channel.send(f"⏳ Please wait {remaining} seconds before generating another GIF!")
+                return
+
+        # 2. Check for flags
         use_recent = "-recent" in prompt
         use_expensive = "-expensive" in prompt
         resolution_quality = "low"  # Default to low
         
-        # Check for resolution flag
+        # Resolution flag check
         if "-resolution" in prompt:
             parts = prompt.split()
             for i, part in enumerate(parts):
@@ -109,7 +123,9 @@ async def on_message(message):
         
         # Final cleanup: remove any extra spaces
         prompt = " ".join(prompt.split())
+        user_prompt = prompt  # store original prompt from user before adding context to the prompt
 
+        # Recent flag check (message context)
         if use_recent:
             messages = []
             async for msg in message.channel.history(limit=10):
@@ -134,7 +150,7 @@ async def on_message(message):
             if json_string:
                 prompt = f"Here's the message history:\n{json_string}\n\nHere's the User Prompt:\n{prompt}"
 
-        # Check if image prompt - support multiple images
+        # 3. Check if image prompt - support multiple images
         image_urls = []
         if message.attachments:
             for idx, attachment in enumerate(message.attachments):
@@ -148,7 +164,7 @@ async def on_message(message):
                     await message.channel.send(f"Incorrect image type for attachment {idx+1}.")
                     return    
         
-        # Validate
+        # 4. Validate prompt for safety
         is_valid, error = validate_prompt(prompt)
         if not is_valid:
             await message.channel.send(f"error caused {error}")
@@ -160,6 +176,9 @@ async def on_message(message):
         else:
             status_msg = await message.channel.send("Generating the gif... (1-2 minutes)")
 
+        user_cooldowns[user_id] = current_time  # Set cooldown after successful prompt
+
+        # 5. Generate the gif
         try:
             # Generates video 
             loop = asyncio.get_event_loop()
@@ -183,10 +202,9 @@ async def on_message(message):
                 video_url = vid_output[0]
             else:
                 video_url = vid_output
-            
-            await status_msg.edit(content="Converting to GIF...")
-            
+
             # Converts to gif
+            await status_msg.edit(content="Converting to GIF...")
             gif_path = await loop.run_in_executor(
                 None,
                 download,
@@ -201,7 +219,7 @@ async def on_message(message):
                 return
             
             # Send GIF 
-            await message.channel.send(content=f"✨ Here's your GIF: *{prompt}*", file=discord.File(gif_path))
+            await message.channel.send(content=f"✨ Here's your GIF: *{user_prompt}*", file=discord.File(gif_path))
             await status_msg.delete()
             
             # Clean the GIF file 
