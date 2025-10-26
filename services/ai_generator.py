@@ -122,14 +122,15 @@ def generate_video_cheap(user_prompt, images=None, resolution_quality="low"):
                 input=input_params
             )
     else:
-        # Text-to-video with SeedAnce-1-Lite
+        # Text-to-video with SeedAnce-1-Pro-Fast (cheap mode)
         full_prompt = Config.PROMPT_TEMPLATE.format(user_prompt=user_prompt)
         
         output = replicate.run(
-            "bytedance/seedance-1-lite",
+            "bytedance/seedance-1-pro-fast",
             input={
                 "prompt": full_prompt,
-                "resolution": resolution
+                "resolution": resolution,
+                "duration": Config.GIF_DURATION
             }
         )
     
