@@ -29,6 +29,57 @@ async def on_message(message):
         return
     
     content = message.content[len(Config.COMMAND_PREFIX):].strip()
+    
+    # Create help command
+    if content.lower() == 'help':
+        help_embed = discord.Embed(
+            title = " GIF Goblin 🧌",
+            description = "Generate custom GIFs using AI. Here are the steps:",
+            colour=0x9caa58 
+        )
+        
+        help_embed.add_field(
+            name="Text to GIF",
+            value="```!gif <your prompt>```\nExample: `!gif dancing robot in space`",
+            inline=False
+        )
+        
+        help_embed.add_field(
+            name="Image to GIF",
+            value="Upload 1 or more images + `!gif <prompt>`\nExample: Upload photo + `!gif waving hello`",
+            inline=False
+        )
+        
+        help_embed.add_field(
+            name="Flags & Options",
+            value=(
+                "`-resolution low/medium/high` - Set quality (default: low)\n"
+                "`-expensive` - Use premium model for better results\n"
+                "`-recent` - Include last 10 messages as context"
+            ),
+            inline=False
+        )
+    
+        help_embed.add_field(
+            name="Example Commands",
+            value=(
+                "`!gif cat playing piano`\n"
+                "`!gif -resolution high sunset over mountains`\n"
+                "`!gif -expensive cyberpunk city at night`\n"
+                "`!gif -recent -resolution medium` (uses chat context)"
+            ),
+            inline=False
+        )
+        
+        help_embed.set_footer(
+            text="Don't get too wacky. Enjoy!"
+        )
+        
+        await message.channel.send(embed=help_embed)
+        return
+        
+    
+    
     # Command
     if content.lower().startswith('gif '):
         prompt = content[4:].strip()
