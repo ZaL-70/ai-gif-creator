@@ -50,7 +50,7 @@ async def on_message(message):
         
         help_embed.add_field(
             name="Image to GIF",
-            value="Upload 1 or more images + `!gif <prompt>`\nExample: Upload photo + `!gif waving hello`",
+            value="Upload up to two images + `!gif <prompt>`\nExample: Upload photo + `!gif waving hello`",
             inline=False
         )
         
