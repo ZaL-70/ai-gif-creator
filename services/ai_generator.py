@@ -2,41 +2,58 @@ import replicate
 import os
 from config import Config
 
-def generate_video(user_prompt, image=None, context=None, resolution_quality="low"):
+def generate_video(user_prompt, images=None, resolution_quality="low"):
     # Set Replicate API token from config
     os.environ["REPLICATE_API_TOKEN"] = Config.REPLICATE_API_TOKEN
     
     # Get resolution from config based on quality parameter
     resolution = Config.RESOLUTION_MAP[resolution_quality]
     
-    # Truncate prompt if it exceeds max length
-    if len(user_prompt) > Config.MAX_PROMPT_LENGTH:
-        user_prompt = user_prompt[:Config.MAX_PROMPT_LENGTH]
-    
-    # Prepare context section
-    context_section = ""
-    if context:
-        context_section = Config.CONTEXT_TEMPLATE.format(context_messages=context)
-    
-    if image:
-        # Use Veo 3 Fast model for image-to-video
-        # Use a pre-prompt that instructs the model to study the image
-        prompt = Config.IMAGE_PROMPT_TEMPLATE.format(user_prompt=user_prompt, context_section=context_section)
+    if images:
+        prompt = Config.IMAGE_PROMPT_TEMPLATE.format(user_prompt=user_prompt)
         
-        output = replicate.run(
-            "google-deepmind/veo-3-fast",
-            input={
+        # Handle single or multiple images
+        if isinstance(images, list):
+            if len(images) == 1:
+                # Use Veo 3 Fast for single image - requires specific settings
+                input_params = {
+                    "prompt": prompt,
+                    "image": images[0],
+                    "resolution": "720p",  # Veo only supports 720p or 1080p
+                    "duration": 4  # Veo only supports 4, 6, or 8 seconds
+                }
+                output = replicate.run(
+                    "google/veo-3-fast",
+                    input=input_params
+                )
+            else:
+                # Use Seedance-1-Lite with reference_images for multiple images
+                input_params = {
+                    "prompt": prompt,
+                    "resolution": resolution,
+                    "duration": Config.GIF_DURATION,
+                    "reference_images": images
+                }
+                output = replicate.run(
+                    "bytedance/seedance-1-lite",
+                    input=input_params
+                )
+        else:
+            # Single image (not in list) - use Veo 3 Fast
+            input_params = {
                 "prompt": prompt,
-                "image": image,
-                "audio": False,  # No audio needed for GIF conversion
-                "resolution": resolution,
-                "duration": Config.GIF_DURATION  # Limit to 3 seconds to control costs
+                "image": images,
+                "resolution": "720p",  # Veo only supports 720p or 1080p
+                "duration": 4  # Veo only supports 4, 6, or 8 seconds
             }
-        )
+            output = replicate.run(
+                "google/veo-3-fast",
+                input=input_params
+            )
     else:
         # Use Sora 2 model for text-to-video
         # Format prompt using template from config
-        full_prompt = Config.PROMPT_TEMPLATE.format(user_prompt=user_prompt, context_section=context_section)
+        full_prompt = Config.PROMPT_TEMPLATE.format(user_prompt=user_prompt)
         
         # Request 3 seconds of video (pricing is per second, not frames)
         # Let the model use its optimal frame rate
@@ -52,45 +69,63 @@ def generate_video(user_prompt, image=None, context=None, resolution_quality="lo
     
     return output
 
-def generate_video_cheap(user_prompt, image=None, context=None, resolution_quality="low"):
+def generate_video_cheap(user_prompt, images=None, resolution_quality="low"):
     # Set Replicate API token from config
     os.environ["REPLICATE_API_TOKEN"] = Config.REPLICATE_API_TOKEN
     
     # Get resolution from config based on quality parameter
     resolution = Config.RESOLUTION_MAP[resolution_quality]
     
-    # Truncate prompt if it exceeds max length
-    if len(user_prompt) > Config.MAX_PROMPT_LENGTH:
-        user_prompt = user_prompt[:Config.MAX_PROMPT_LENGTH]
-    
-    # Prepare context section
-    context_section = ""
-    if context:
-        context_section = Config.CONTEXT_TEMPLATE.format(context_messages=context)
-    
-    if image:
-        # Image-to-video with SeedAnce-1 Pro Max
-        prompt = Config.IMAGE_PROMPT_TEMPLATE.format(user_prompt=user_prompt, context_section=context_section)
+    if images:
+        prompt = Config.IMAGE_PROMPT_TEMPLATE.format(user_prompt=user_prompt)
         
-        output = replicate.run(
-            "bytedance/seedance-1-pro-max",
-            input={
+        # Handle single or multiple images
+        if isinstance(images, list):
+            if len(images) == 1:
+                # Use Veo 3 Fast for single image - requires specific settings
+                input_params = {
+                    "prompt": prompt,
+                    "image": images[0],
+                    "resolution": "720p",  # Veo only supports 720p or 1080p
+                    "duration": 4  # Veo only supports 4, 6, or 8 seconds
+                }
+                output = replicate.run(
+                    "google/veo-3-fast",
+                    input=input_params
+                )
+            else:
+                # Use Seedance-1-Lite with reference_images for multiple images
+                input_params = {
+                    "prompt": prompt,
+                    "resolution": resolution,
+                    "duration": Config.GIF_DURATION,
+                    "reference_images": images
+                }
+                output = replicate.run(
+                    "bytedance/seedance-1-lite",
+                    input=input_params
+                )
+        else:
+            # Single image (not in list) - use Veo 3 Fast
+            input_params = {
                 "prompt": prompt,
-                "image": image,
-                "resolution": resolution,
-                "duration": Config.GIF_DURATION  # Limit to 3 seconds to control costs
+                "image": images,
+                "resolution": "720p",  # Veo only supports 720p or 1080p
+                "duration": 4  # Veo only supports 4, 6, or 8 seconds
             }
-        )
+            output = replicate.run(
+                "google/veo-3-fast",
+                input=input_params
+            )
     else:
-        # Text-to-video with SeedAnce-1 Pro Max
-        full_prompt = Config.PROMPT_TEMPLATE.format(user_prompt=user_prompt, context_section=context_section)
+        # Text-to-video with SeedAnce-1-Lite
+        full_prompt = Config.PROMPT_TEMPLATE.format(user_prompt=user_prompt)
         
         output = replicate.run(
-            "bytedance/seedance-1-pro-max",
+            "bytedance/seedance-1-lite",
             input={
                 "prompt": full_prompt,
-                "resolution": resolution,
-                "duration": Config.GIF_DURATION  # Limit to 3 seconds to control costs
+                "resolution": resolution
             }
         )
     
