@@ -33,9 +33,9 @@ async def on_message(message):
     if content.lower().startswith('gif '):
         prompt = content[4:].strip()
 
-        use_recent = prompt.startswith("-recent")
+        # Check for flags
+        use_recent = "-recent" in prompt
         use_expensive = "-expensive" in prompt
-        context_messages = None
         resolution_quality = "low"  # Default to low
         
         # Check for resolution flag
@@ -46,20 +46,19 @@ async def on_message(message):
                     next_part = parts[i + 1].lower()
                     if next_part in ["low", "medium", "high"]:
                         resolution_quality = next_part
-                        # Remove both -resolution and the quality value (preserving original case)
+                        # Remove both -resolution and the quality value
                         prompt = prompt.replace(f"-resolution {parts[i + 1]}", "", 1).strip()
-                        # Clean up any double spaces
-                        prompt = " ".join(prompt.split())
                     break
-
+        
+        # Remove flags from prompt
         if use_recent:
             prompt = prompt.replace("-recent", "", 1).strip()
         if use_expensive:
-            prompt = prompt.replace("-expensive", "").strip()
+            prompt = prompt.replace("-expensive", "", 1).strip()
         
-        # Final cleanup: remove any remaining flags and clean up spaces
+        # Final cleanup: remove any extra spaces
         prompt = " ".join(prompt.split())
-            
+
         if use_recent:
             messages = []
             async for msg in message.channel.history(limit=10):
@@ -71,6 +70,7 @@ async def on_message(message):
                     "timestamp": msg.created_at.isoformat(),
                 })
             messages.reverse()  # chronological order
+            json_string = json.dumps(messages, indent=2, ensure_ascii=False)
 
             os.makedirs("data", exist_ok=True)
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -79,26 +79,23 @@ async def on_message(message):
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(messages, f, indent=2, ensure_ascii=False)
 
-            # Format context messages for prompt with author, timestamp, and content
-            context_messages = "\n".join([
-                f"- [{msg['timestamp']}] {msg['author']}: {msg['content']}" 
-                for msg in messages[-5:]
-            ])  # Last 5 messages
+            # Combine context and prompt
+            if json_string:
+                prompt = f"Here's the message history:\n{json_string}\n\nHere's the User Prompt:\n{prompt}"
 
-        # Check if image prompt
-        image_url = None
+        # Check if image prompt - support multiple images
+        image_urls = []
         if message.attachments:
-            attachment = message.attachments[0]
-            
-            if attachment.content_type and attachment.content_type.startswith('image/'):
-                if attachment.size > 8 * 1024 * 1024:
-                    await message.channel.sent("Error: Image is too large! Max size is 8MB.")
-                    return
-                image_url = attachment.url
-                print(f"image detected:", {image_url})
-            else:
-                await message.channel.send("Incorrect image type.")
-                return    
+            for idx, attachment in enumerate(message.attachments):
+                if attachment.content_type and attachment.content_type.startswith('image/'):
+                    if attachment.size > 8 * 1024 * 1024:
+                        await message.channel.send(f"Error: Image {idx+1} is too large! Max size is 8MB.")
+                        return
+                    image_urls.append(attachment.url)
+                    print(f"Image {idx+1} detected: {attachment.url}")
+                else:
+                    await message.channel.send(f"Incorrect image type for attachment {idx+1}.")
+                    return    
         
         # Validate
         is_valid, error = validate_prompt(prompt)
@@ -106,8 +103,9 @@ async def on_message(message):
             await message.channel.send(f"error caused {error}")
             return
             
-        if image_url:
-            status_msg = await message.channel.send("Creating gif from Image + Prompt... (1-2 minutes)")
+        if image_urls:
+            num_images = len(image_urls)
+            status_msg = await message.channel.send(f"Creating gif from {num_images} image(s) + Prompt... (1-2 minutes)")
         else:
             status_msg = await message.channel.send("Generating the gif... (1-2 minutes)")
 
@@ -118,15 +116,17 @@ async def on_message(message):
             # Choose model based on -expensive flag
             generator_func = generate_video if use_expensive else generate_video_cheap
             
-            # Build kwargs
-            kwargs = {"image": image_url, "resolution_quality": resolution_quality}
-            if use_recent and context_messages:
-                kwargs["context"] = context_messages
-            
-            vid_output = await loop.run_in_executor(
-                None,
-                lambda: generator_func(prompt, **kwargs)
-            )
+            # Moving to the correct model
+            if image_urls:
+                vid_output = await loop.run_in_executor(
+                    None,
+                    lambda: generator_func(prompt, image_urls, resolution_quality)
+                )
+            else:
+                vid_output = await loop.run_in_executor(
+                    None,
+                    lambda: generator_func(prompt, None, resolution_quality)
+                )
             
             if isinstance(vid_output, list):
                 video_url = vid_output[0]
