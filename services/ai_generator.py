@@ -12,7 +12,7 @@ def generate_video(user_prompt, images=None, resolution_quality="low"):
     if images:
         prompt = Config.IMAGE_PROMPT_TEMPLATE.format(user_prompt=user_prompt)
         
-        # Handle single or multiple images
+        # Handle single or 2 images
         if isinstance(images, list):
             if len(images) == 1:
                 # Use Veo 3 Fast for single image - requires specific settings
@@ -26,16 +26,19 @@ def generate_video(user_prompt, images=None, resolution_quality="low"):
                     "google/veo-3-fast",
                     input=input_params
                 )
-            else:
-                # Use Seedance-1-Lite with reference_images for multiple images
+            elif len(images) == 2:
+                # Use Kling v2.1 for 2 images (expensive mode)
+                # Kling uses start_image and end_image for first and last frame
+                mode = "pro" if resolution_quality == "high" else "standard"
                 input_params = {
                     "prompt": prompt,
-                    "resolution": resolution,
-                    "duration": Config.GIF_DURATION,
-                    "reference_images": images
+                    "start_image": images[0],
+                    "end_image": images[1],
+                    "mode": mode,  # standard=720p, pro=1080p
+                    "duration": 5  # Kling default duration
                 }
                 output = replicate.run(
-                    "bytedance/seedance-1-lite",
+                    "kwaivgi/kling-v2.1",
                     input=input_params
                 )
         else:
@@ -79,42 +82,43 @@ def generate_video_cheap(user_prompt, images=None, resolution_quality="low"):
     if images:
         prompt = Config.IMAGE_PROMPT_TEMPLATE.format(user_prompt=user_prompt)
         
-        # Handle single or multiple images
+        # Handle single or 2 images
         if isinstance(images, list):
             if len(images) == 1:
-                # Use Veo 3 Fast for single image - requires specific settings
+                # Use SeedAnce-1-Pro for single image (cheap mode)
                 input_params = {
                     "prompt": prompt,
                     "image": images[0],
-                    "resolution": "720p",  # Veo only supports 720p or 1080p
-                    "duration": 4  # Veo only supports 4, 6, or 8 seconds
+                    "resolution": resolution,
+                    "duration": Config.GIF_DURATION
                 }
                 output = replicate.run(
-                    "google/veo-3-fast",
+                    "bytedance/seedance-1-pro",
                     input=input_params
                 )
-            else:
-                # Use Seedance-1-Lite with reference_images for multiple images
+            elif len(images) == 2:
+                # Use SeedAnce-1-Pro for 2 images with start and end frame
                 input_params = {
                     "prompt": prompt,
+                    "image": images[0],
+                    "last_frame_image": images[1],
                     "resolution": resolution,
-                    "duration": Config.GIF_DURATION,
-                    "reference_images": images
+                    "duration": Config.GIF_DURATION
                 }
                 output = replicate.run(
-                    "bytedance/seedance-1-lite",
+                    "bytedance/seedance-1-pro",
                     input=input_params
                 )
         else:
-            # Single image (not in list) - use Veo 3 Fast
+            # Single image (not in list) - use SeedAnce-1-Pro
             input_params = {
                 "prompt": prompt,
                 "image": images,
-                "resolution": "720p",  # Veo only supports 720p or 1080p
-                "duration": 4  # Veo only supports 4, 6, or 8 seconds
+                "resolution": resolution,
+                "duration": Config.GIF_DURATION
             }
             output = replicate.run(
-                "google/veo-3-fast",
+                "bytedance/seedance-1-pro",
                 input=input_params
             )
     else:
