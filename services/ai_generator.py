@@ -29,12 +29,12 @@ def generate_video(user_prompt, images=None, resolution_quality="low"):
             elif len(images) == 2:
                 # Use Kling v2.1 for 2 images (expensive mode)
                 # Kling uses start_image and end_image for first and last frame
-                mode = "pro" if resolution_quality == "high" else "standard"
+                # Note: end_image REQUIRES mode 'pro'
                 input_params = {
                     "prompt": prompt,
                     "start_image": images[0],
                     "end_image": images[1],
-                    "mode": mode,  # standard=720p, pro=1080p
+                    "mode": "pro",  # end_image requires 'pro' mode (1080p)
                     "duration": 5  # Kling default duration
                 }
                 output = replicate.run(
